@@ -1,0 +1,23 @@
+/// <reference types="vitest/config" />
+import { defineConfig } from "vitest/config";
+import react from "@vitejs/plugin-react";
+import { fileURLToPath, URL } from "node:url";
+
+// https://vitejs.dev/config/
+export default defineConfig({
+  plugins: [react()],
+  base: "/prueba-prometheus/",
+  resolve: {
+    alias: {
+      "@": fileURLToPath(new URL("./src", import.meta.url)),
+    },
+  },
+  test: {
+    env: { VITE_API_URL: "http://localhost:3000" },
+    globals: true,
+    environment: "jsdom",
+    setupFiles: "./src/test/setup.js",
+    css: false,
+    exclude: ["e2e/**", "node_modules/**", "dist/**"],
+  },
+});

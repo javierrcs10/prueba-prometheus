@@ -1,0 +1,148 @@
+import { useContext } from "react";
+import { useSearchParams } from "react-router-dom";
+import PentaContext from "../../context/PentaContext";
+import LittleSpinner from "../../assets/LittleSpinner";
+import DownloadLogo from "../../assets/DownloadLogo";
+import { ChevronDown } from "lucide-react";
+import * as XLSX from "xlsx";
+import { cn } from "@/lib/utils";
+import { buttonVariants } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
+import { getAllInventory } from "../../lib/api";
+import Toast from "../Toast";
+
+// DownloadButton component is used for downloading the current inventory
+
+const DownloadButton = () => {
+  const { isDownloading, setIsDownloading, buildInventoryParams, inventoryGroups } =
+    useContext(PentaContext);
+  const [searchParams] = useSearchParams();
+  // Scope the export to the currently opened inventory group (if any) so it
+  // matches what the user is viewing, rather than every group's inventory.
+  const activeGroup =
+    inventoryGroups?.find((group) => group.key === searchParams.get("group")) || null;
+
+  /**
+   * Create and initiate the download of a blob containing inventory data in the chosen file format.
+   *
+   * @param {string} fileType - The file format for the download (either 'csv' or 'xlsx').
+   */
+  async function createBlob(fileType) {
+    // Set the animation state to indicate the download process has started.
+    setIsDownloading(true);
+
+    // Asynchronously fetch and process the data for download.
+    (async () => {
+      // Generate the base URL for fetching data.
+      // If there are no active search or filters, the base URL will fetch the entire inventory.
+      // Otherwise, the base URL will retrieve items that match the applied search and filters criteria.
+      // When a group is open, restrict the export to that group's SKU codes.
+      const allRecords = await getAllInventory(
+        buildInventoryParams({ includeSkuCodes: activeGroup?.skuCodes })
+      );
+
+      // If any page failed, tell the user and stop the "downloading" state.
+      if (allRecords === null) {
+        Toast({ message: "We couldn't download the inventory. Please try again.", type: "is-danger" });
+        setIsDownloading(false);
+        return;
+      }
+
+      // Fills the data for empty values.
+      const mappedData = allRecords.map((e) => [
+        e.fields["Item ID"] || "",
+        e.fields["Description (from SKU)"] || "",
+        e.fields["Size"] || "",
+        e.fields["Model/Type"] || "",
+        e.fields["Name (from Manufacturer)"] || "",
+      ]);
+
+      // Formats the data for download as stringified CSV format.
+      const allContent = [
+        "ID,Description,Size,Model/Type,Manufacturer",
+        ...mappedData.map((row) => `"${row.join('","')}"`),
+      ].join("\n");
+
+      // Helper function to initiate the download of a blob.
+      const downloadBlob = (blob, filename) => {
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = filename;
+        link.click();
+      };
+
+      // Helper function to convert a string to an ArrayBuffer.
+      const s2ab = (s) => {
+        const buf = new ArrayBuffer(s.length);
+        const view = new Uint8Array(buf);
+        for (let i = 0; i < s.length; i++) {
+          view[i] = s.charCodeAt(i) & 0xff;
+        }
+        return buf;
+      };
+
+      // Download data in the chosen format (CSV or XLSX).
+      if (fileType === "csv") {
+        const blob = new Blob([allContent], { type: "text/csv" });
+        downloadBlob(blob, "Inventory Data.csv");
+      } else {
+        // XLSX
+        const workbook = XLSX.utils.book_new();
+        const sheetData = [
+          ["ID", "Description", "Size", "Model/Type", "Manufacturer"],
+          ...mappedData,
+        ];
+        const worksheet = XLSX.utils.aoa_to_sheet(sheetData);
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
+
+        const wbout = XLSX.write(workbook, {
+          bookType: "xlsx",
+          bookSST: false,
+          type: "binary",
+        });
+        const blob = new Blob([s2ab(wbout)], {
+          type: "application/octet-stream",
+        });
+        downloadBlob(blob, "Inventory Data.xlsx");
+      }
+
+      // Stop animation to indicate the download process has completed.
+      setIsDownloading(false);
+    })();
+  }
+
+  return (
+    <div className="toolbar-export">
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          aria-label="Export inventory"
+          title="Export current inventory as CSV or Excel"
+          className={cn(
+            buttonVariants({ variant: "outline", size: "lg" }),
+            "h-11 gap-2 rounded-full px-3 sm:px-5 [&_svg:not([class*='size-'])]:size-6"
+          )}
+        >
+          {/* Loading spinner while downloading, otherwise the download icon. */}
+          {isDownloading ? <LittleSpinner size={24} /> : <DownloadLogo />}
+          <span className="hidden sm:inline">Export</span>
+          <ChevronDown className="size-4" aria-hidden="true" />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem className="export-menu-item" onClick={() => createBlob("csv")}>
+            .csv
+          </DropdownMenuItem>
+          <DropdownMenuItem className="export-menu-item" onClick={() => createBlob("xlsx")}>
+            .xlsx
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  );
+};
+
+export default DownloadButton;

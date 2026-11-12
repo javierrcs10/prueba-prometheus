@@ -1,0 +1,63 @@
+import { useContext } from "react";
+import { Search as SearchIcon, X as XIcon } from "lucide-react";
+import PentaContext from "../../context/PentaContext";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput,
+} from "@/components/ui/input-group";
+
+// Search component used for searching through the inventory.
+
+const Search = () => {
+  const { searchInput, setSearchInput } = useContext(PentaContext);
+
+  // Handler for input changes in the search bar.
+  const onSearchChange = (e) => {
+    setSearchInput(e.target.value);
+  };
+
+  // Clear the search input.
+  const clearSearchInput = () => {
+    setSearchInput("");
+  };
+
+  return (
+    <form id="search-form" onSubmit={(e) => e.preventDefault()}>
+        {/* Override the theme ring (Penta coral) with the blue theme locally so
+            the search box focuses blue instead of orange. */}
+        <InputGroup className="h-11 w-full rounded-full bg-white text-base [--ring:#35b0fb] [&_svg:not([class*='size-'])]:size-5 has-[[data-slot=input-group-control]:focus-visible]:border-input">
+          {/* Search Icon */}
+          <InputGroupAddon align="inline-start" className="pl-4">
+            <SearchIcon />
+          </InputGroupAddon>
+
+          {/* Search Input */}
+          <InputGroupInput
+            type="text"
+            placeholder="Search by keyword, matches all terms"
+            className="h-full pl-2"
+            value={searchInput}
+            onChange={onSearchChange}
+          />
+
+          {/* Clear Search Button */}
+          {searchInput && (
+            <InputGroupAddon align="inline-end" className="pr-3 has-[>button]:mr-0">
+              <InputGroupButton
+                id="search-clear"
+                aria-label="ClearSearch"
+                size="icon-xs"
+                onClick={clearSearchInput}
+              >
+                <XIcon />
+              </InputGroupButton>
+            </InputGroupAddon>
+          )}
+        </InputGroup>
+    </form>
+  );
+};
+
+export default Search;
