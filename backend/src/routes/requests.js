@@ -1,5 +1,5 @@
 import { AirtableError, createRecord, getRecord } from "../lib/airtable.js";
-import { errorResponse } from "../lib/responses.js";
+import { errorResponse, json } from "../lib/responses.js";
 import { readJsonBody } from "../lib/body.js";
 import { findAvailableItems, parseItemIds } from "../lib/inventoryItems.js";
 
@@ -118,8 +118,5 @@ export async function handleRequests(request, env) {
     ...(clinicianId ? { Clinician: [clinicianId] } : {}),
   });
 
-  return new Response(JSON.stringify({ ok: true }), {
-    status: 201,
-    headers: { "Content-Type": "application/json" },
-  });
+  return json({ ok: true }, { status: 201 });
 }

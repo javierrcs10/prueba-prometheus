@@ -4,7 +4,15 @@ export function escapeFormulaString(value) {
   return String(value).replace(/\\/g, "\\\\").replace(/"/g, '\\"');
 }
 
-const quoted = (value) => `"${escapeFormulaString(value)}"`;
+export const quoted = (value) => `"${escapeFormulaString(value)}"`;
+
+// Base filters: only items that are available (not in a request, not shipped)
+// and that have a SKU. The browser cannot remove these.
+export const AVAILABLE_CONDITIONS = [
+  "{Requests}=BLANK()",
+  "{Shipment Status}=BLANK()",
+  'NOT({SKU}="")',
+];
 
 // The Parts filter options do not match the Airtable "Limb Guide" values 1:1,
 // so they are translated here. "All" (or empty) means no filter.
@@ -20,13 +28,7 @@ export const LIMB_GUIDE_BY_PART = {
 // Builds the filterByFormula for GET /api/inventory from ALREADY VALIDATED
 // filters (see parseInventoryParams). Never call it with raw user input.
 export function buildInventoryFormula(filters) {
-  // Base filters: only items that are available (not in a request, not shipped)
-  // and that have a SKU. The browser cannot remove these.
-  const conditions = [
-    "{Requests}=BLANK()",
-    "{Shipment Status}=BLANK()",
-    'NOT({SKU}="")',
-  ];
+  const conditions = [...AVAILABLE_CONDITIONS];
 
   const codeCondition = (code) => `{SKU Item Code}=${quoted(code)}`;
   if (filters.includeSku.length > 0) {

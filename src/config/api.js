@@ -1,1 +1,1 @@
-export const API_URL = "https://prueba-prometheus-backend.vercel.app";
+export const API_URL = "http://localhost:3000";

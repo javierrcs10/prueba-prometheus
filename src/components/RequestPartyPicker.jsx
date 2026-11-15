@@ -10,7 +10,7 @@ import {
   ComboboxItem,
   useComboboxAnchor,
 } from "@/components/ui/combobox";
-import { getRequestParties } from "../lib/api"; // <- ajusta a la ruta real de tu archivo de conexión
+import { getRequestParties } from "../lib/api";
 
 const RequestPartyPicker = ({
   initialParty = null,
@@ -39,8 +39,8 @@ const RequestPartyPicker = ({
       setIsLoading(true);
       setLoadError(false);
       try {
-        // Ya viene filtrado, ordenado y con los clínicos de cada partner
         const nextPartners = await getRequestParties("partners");
+        console.log(nextPartners.find((p) => p.label.includes("Stepping")));
         if (!nextPartners) throw new Error("Could not load partners");
         if (cancelled) return;
 

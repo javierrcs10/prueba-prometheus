@@ -5,16 +5,16 @@ export class AirtableError extends Error {
     this.status = status;
   }
 }
- 
+
 async function airtableFetch(env, path, { method = "GET", query, body } = {}) {
   const url = new URL(`${env.AIRTABLE_API_URL}/${env.AIRTABLE_BASE_ID}/${path}`);
- 
+
   if (query) {
     for (const [key, value] of Object.entries(query)) {
       if (value !== undefined && value !== null) url.searchParams.set(key, value);
     }
   }
- 
+
   const res = await fetch(url, {
     method,
     headers: {
@@ -23,7 +23,7 @@ async function airtableFetch(env, path, { method = "GET", query, body } = {}) {
     },
     body: body ? JSON.stringify(body) : undefined,
   });
- 
+
   if (!res.ok) throw new AirtableError(res.status);
   return res.json();
 }
@@ -32,7 +32,7 @@ async function airtableFetch(env, path, { method = "GET", query, body } = {}) {
 export async function listRecords(env, table, query = {}) {
   const records = [];
   let offset;
- 
+
   do {
     const page = await airtableFetch(env, encodeURIComponent(table), {
       query: { ...query, offset },
@@ -52,7 +52,7 @@ export async function listPage(env, table, query = {}) {
 export async function getRecord(env, table, recordId) {
   return airtableFetch(env, `${encodeURIComponent(table)}/${recordId}`);
 }
- 
+
 // Creates one record. fields is a plain object keyed by Airtable field names;
 // link fields take arrays of Airtable record IDs. There is no typecast.
 export async function createRecord(env, table, fields) {

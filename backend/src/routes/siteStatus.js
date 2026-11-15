@@ -1,6 +1,6 @@
 import { listRecords } from "../lib/airtable.js";
 import { json } from "../lib/responses.js";
- 
+
 const VALID_STATUSES = new Set(["Online", "Offline"]);
 
 const normalizeRecord = (record, role) => {
@@ -18,9 +18,8 @@ const normalizeRecord = (record, role) => {
   };
 };
 
-const findRecord = (records, id, functionPattern) =>
-  records.find((record) => String(record?.fields?.ID ?? "") === id) ||
-  records.find((record) => functionPattern.test(functionName(record)));
+const findRecord = (records, id) =>
+  records.find((record) => String(record?.fields?.ID ?? "") === id);
 
 function parseSiteStatusRecords(records) {
   if (!Array.isArray(records)) {
@@ -28,21 +27,14 @@ function parseSiteStatusRecords(records) {
   }
 
   return {
-    announcement: normalizeRecord(
-      findRecord(records, "1", /pop[- ]?up|announcement/i),
-      "announcement"
-    ),
-    platform: normalizeRecord(
-      findRecord(records, "2", /platform/i),
-      "platform"
-    ),
+    announcement: normalizeRecord(findRecord(records, "1"), "announcement"),
+    platform: normalizeRecord(findRecord(records, "2"), "platform"),
   };
 }
- 
+
 export async function handleSiteStatus(request, env) {
   const records = await listRecords(env, "Site-Status");
   const status = parseSiteStatusRecords(records);
- 
+
   return json(status, { cache: "public, max-age=10" });
 }
- 

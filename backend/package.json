@@ -1,17 +1,14 @@
 {
-  "name": "my-first-worker",
-  "version": "0.0.0",
+  "name": "inventory-backend",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
+  "engines": { "node": ">=20.6" },
   "scripts": {
-    "deploy": "wrangler deploy",
-    "dev": "wrangler dev",
-    "start": "wrangler dev",
-    "test": "vitest"
+    "dev": "node --env-file=.env.local dev/server.js",
+    "test": "vitest run"
   },
   "devDependencies": {
-    "@cloudflare/vitest-plugin": "^1.0.0",
-    "vitest": "~4.1.0",
-    "wrangler": "^4.149.0"
+    "vitest": "~4.1.0"
   }
 }

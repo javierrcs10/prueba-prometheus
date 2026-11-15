@@ -7,8 +7,6 @@ import { buildInventoryFormula } from "../lib/formula.js";
 // One page of available inventory. The browser sends simple parameters; this
 // handler validates them, builds the Airtable formula itself and asks Airtable.
 export async function handleInventory(request, env) {
-
-
   const { value, error } = parseInventoryParams(new URL(request.url));
 
   // Bad input from the client is a 400, not a server error.
@@ -23,7 +21,5 @@ export async function handleInventory(request, env) {
   });
 
   // Same shape as Airtable ({ records, offset }) so the frontend keeps working.
-  // PHASE 2 (later): return only the fields the screens use, once you have
-  // confirmed the list (see the grep in the notes). For now, full records.
   return json({ records: page.records, offset: page.offset });
 }

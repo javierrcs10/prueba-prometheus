@@ -1,13 +1,11 @@
 import { listRecords } from "./airtable.js";
-import { escapeFormulaString } from "./formula.js";
+import { AVAILABLE_CONDITIONS, quoted } from "./formula.js";
 
 // Most Item IDs asked about in one Airtable formula. Same as the frontend's
 // AVAILABILITY_BATCH_SIZE.
 export const MAX_ITEM_IDS_PER_LOOKUP = 100;
 
 const MAX_ITEM_ID_LENGTH = 40;
-
-const quoted = (value) => `"${escapeFormulaString(value)}"`;
 
 // Validates a list of Item IDs coming from a request body.
 // Returns { value: [ids] } or { error }. Escaping (not a strict character set)
@@ -45,7 +43,7 @@ export async function findAvailableItems(env, itemIds) {
     const matches = batch.map((id) => `{Item ID}=${quoted(id)}`);
 
     const records = await listRecords(env, "Inventory", {
-      filterByFormula: `AND({Requests}=BLANK(),{Shipment Status}=BLANK(),NOT({SKU}=""),OR(${matches.join(",")}))`,
+      filterByFormula: `AND(${AVAILABLE_CONDITIONS.join(",")},OR(${matches.join(",")}))`,
       pageSize: MAX_ITEM_IDS_PER_LOOKUP,
       "fields[]": "Item ID",
     });
