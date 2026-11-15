@@ -1,1 +1,1 @@
-export const API_URL = "https://prueba-prometheus-backend-iota.vercel.app/";
+export const API_URL = "https://prueba-prometheus-backend-iota.vercel.app";
